@@ -361,3 +361,20 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Personal
+
+# Build output
+x64/
+Debug/
+Release/
+x64/
+
+# Visual Studio files
+*.user
+*.suo
+*.VC.db
+*.VC.opendb
+
+# vcpkg (if you don't want to commit it)
+vcpkg/
