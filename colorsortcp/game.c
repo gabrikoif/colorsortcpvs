@@ -154,6 +154,13 @@ void run_game(int rows, int cols, GameConfig *config)
             }
             else
             {
+                if (stacks[selected] != NULL && pulledList->data != stacks[selected]->data)
+                // Compare top color in color stack and color of memory stack.
+                // If they are different, don't let the push.
+                {
+                    // Add message here
+                    break;
+                }
                 if (list_size(stacks[selected]) + list_size(pulledList) <= MAX_SIZE)
                 {
                     int valToPush;
