@@ -1,131 +1,80 @@
-#include "menu.h"
-#include "platform_utils.h"
+#include <curses.h>
+#include <stdlib.h>
 
-#define NUM_ITEMS 4 // 3 settings + Start
+// Adjust these headers based on your actual filenames
+#include "menu.h" 
+#include "terminal.h" 
 
-#define MIN_STACKS 2
-#define MAX_STACKS 8
-#define MIN_SIZE 3
-#define MAX_SIZE 6
-#define MIN_EMPTY 1
-#define MAX_EMPTY 3
-
-static const char* labels[] = {
-    "Number of Stacks",
-    "Stack Size",
-    "Empty Stacks (Difficulty)",
-    "Start",
-    "NOTE: IF YOU PICK UP AND PRESS ENTER TO PUT DOWN IT COUNTS AS A MOVE. PRESS C TO CANCEL"
-};
-
-static void draw_menu(int rows, int cols, GameConfig* config,
-    int cursor, int editing)
+void draw_menu(int selected, int rows, int cols)
 {
-    clear();
-
-    int values[3] = {
-        config->num_stacks,
-        config->stack_size,
-        config->num_empty };
-
-    int start_row = rows / 2 - NUM_ITEMS;
-
-    mvprintw(start_row - 2, cols / 2 - 5, "COLOR SORT");
-
-    for (int i = 0; i < NUM_ITEMS; i++)
-    {
-        int row = start_row + i * 2;
-        int is_selected = (i == cursor);
-        int is_editing = (i == cursor && editing);
-
-        if (i == NUM_ITEMS - 1)
-        {
-            // Start button
-            if (is_selected)
-                mvprintw(row, cols / 2 - 3, "> START <");
-            else
-                mvprintw(row, cols / 2 - 3, "  START  ");
-        }
-        else
-        {
-            if (is_editing)
-                mvprintw(row, cols / 2 - 15, "  %s:  < %d >", labels[i], values[i]);
-            else if (is_selected)
-                mvprintw(row, cols / 2 - 15, "> %s:    %d  ", labels[i], values[i]);
-            else
-                mvprintw(row, cols / 2 - 15, "  %s:    %d  ", labels[i], values[i]);
+    // --- 1. Draw Textured Background safely using Cyan pair 20 ---
+    attron(COLOR_PAIR(20) | A_DIM);
+    for (int y = 0; y < rows; y++) {
+        for (int x = 0; x < cols; x += 2) {
+            mvaddch(y, x, '.');
         }
     }
+    attroff(COLOR_PAIR(20) | A_DIM);
 
-    mvprintw(rows - 2, cols / 2 - 20,
-        "Up/Down: navigate  Enter: select  Esc: back  q: quit");
+    // --- 2. Title Card Block ---
+    int title_y = rows / 4;
+    attron(A_BOLD);
+    mvprintw(title_y, (cols - 26) / 2, "==========================");
+    mvprintw(title_y + 1, (cols - 26) / 2, "   COLOR SORT ARCADE      ");
+    mvprintw(title_y + 2, (cols - 26) / 2, "==========================");
+    attroff(A_BOLD);
 
-    refresh();
+    // --- 3. Interactive Menu Options ---
+    const char* options[] = { "Start Game", "Options", "Exit" };
+    int menu_y = rows / 2;
+
+    for (int i = 0; i < 3; i++) {
+        int x = (cols - 15) / 2;
+        int y = menu_y + (i * 2);
+
+        if (i == selected) {
+            attron(A_REVERSE | A_BOLD);
+            mvprintw(y, x, " >  %s  < ", options[i]);
+            attroff(A_REVERSE | A_BOLD);
+        }
+        else {
+            mvprintw(y, x, "    %s    ", options[i]);
+        }
+    }
 }
 
-int run_menu(int rows, int cols, GameConfig* config)
+int run_menu(int rows, int cols)
 {
-    int cursor = NUM_ITEMS - 1;
-    int editing = 0;
-
-    draw_menu(rows, cols, config, cursor, editing);
-
-    int ch;
-    while ((ch = getch()) != 'q')
-    {
-        if (editing)
-        {
-            switch (ch)
-            {
-            case KEY_LEFT:
-                if (cursor == 0 && config->num_stacks > MIN_STACKS)
-                    config->num_stacks--;
-                else if (cursor == 1 && config->stack_size > MIN_SIZE)
-                    config->stack_size--;
-                else if (cursor == 2 && config->num_empty > MIN_EMPTY)
-                    config->num_empty--;
-                break;
-
-            case KEY_RIGHT:
-                if (cursor == 0 && config->num_stacks < MAX_STACKS)
-                    config->num_stacks++;
-                else if (cursor == 1 && config->stack_size < MAX_SIZE)
-                    config->stack_size++;
-                else if (cursor == 2 && config->num_empty < MAX_EMPTY)
-                    config->num_empty++;
-                break;
-
-            case '\n':
-            case KEY_ENTER:
-            case 27: // Escape
-                editing = 0;
-                break;
-            }
-        }
-        else
-        {
-            switch (ch)
-            {
-            case KEY_UP:
-                cursor = (cursor - 1 + NUM_ITEMS) % NUM_ITEMS;
-                break;
-
-            case KEY_DOWN:
-                cursor = (cursor + 1) % NUM_ITEMS;
-                break;
-
-            case '\n':
-            case KEY_ENTER:
-                if (cursor == NUM_ITEMS - 1)
-                    return 0; // Start game
-                else
-                    editing = 1;
-                break;
-            }
-        }
-
-        draw_menu(rows, cols, config, cursor, editing);
+    // Initialize color pair 20 ONLY for the menu background dots
+    if (has_colors()) {
+        init_pair(20, COLOR_CYAN, COLOR_BLACK);
     }
 
-    return 1;
+    int selected = 0;
+    keypad(stdscr, TRUE);
+    noecho();
+    curs_set(0); // Hide physical blinking terminal cursor
+
+    while (1) {
+        draw_menu(selected, rows, cols);
+        refresh();
+
+        int ch = getch();
+        switch (ch) {
+        case KEY_UP:
+        case 'w':
+        case 'W':
+            selected = (selected - 1 + 3) % 3;
+            break;
+        case KEY_DOWN:
+        case 's':
+        case 'S':
+            selected = (selected + 1) % 3;
+            break;
+        case 10: // Enter key
+            return selected;
+        case 27: // ESC key
+            return 2; // Treat as exit
+        }
+    }
 }
