@@ -31,25 +31,50 @@ static int check_win(Node **stacks)
     return 1;
 }
 
-static void draw_all(int bottom_row, int start_col, Node **stacks,
-                     int selected, int rows)
+static void draw_all(int top_row, int start_col, Node** stacks, int selected, int rows)
 {
     clear();
+
+    // 1. Draw a solid floor across the entire width of the terminal
+    int floor_row = top_row + (BOX_H * MAX_SIZE);
+    attron(A_NORMAL | A_BOLD);
+    mvhline(floor_row, 0, ACS_HLINE, COLS);
+    attroff(A_NORMAL | A_BOLD);
+
     for (int i = 0; i < NUM_STACKS; i++)
     {
-        int col = start_col + i * (BOX_W + 2);
-        int len = list_size(stacks[i]);
+        // Increased spacing between tubes (swapped +2 for +4)
+        int col = start_col + i * (BOX_W + 4);
 
+        // 2. The New, Higher Cursor
         if (i == selected)
-            mvprintw(bottom_row - BOX_H * MAX_SIZE - 1, col + BOX_W / 2 - 1, "[^]");
-
-        if (len > 0)
         {
-            int row = bottom_row - BOX_H * (len - 1);
-            draw_stack(row, col, BOX_H, BOX_W, stacks[i]);
+            attron(A_BOLD);
+            // Pushed way higher (-4 instead of -1) to hover nicely
+            mvprintw(top_row - 4, col + (BOX_W / 2) - 1, " v ");
+            attroff(A_BOLD);
         }
+
+        // 3. Draw the Flared Test Tube Lip
+        // This adds little outward-curving edges to the top of the glass
+        attron(A_NORMAL);
+        mvaddch(top_row - 1, col - 2, ACS_ULCORNER);          // Flare left
+        mvhline(top_row - 1, col - 1, ACS_HLINE, 1);
+        mvhline(top_row - 1, col + BOX_W, ACS_HLINE, 1);
+        mvaddch(top_row - 1, col + BOX_W + 1, ACS_URCORNER);  // Flare right
+        attroff(A_NORMAL);
+
+        // 4. Draw the actual stack
+        draw_stack(top_row, col, BOX_H, BOX_W, stacks[i], MAX_SIZE);
+
+        // 5. Connect the bottom of the tube to the floor
+        attron(A_NORMAL);
+        mvaddch(floor_row, col - 1, ACS_BTEE);     // T-junction left
+        mvaddch(floor_row, col + BOX_W, ACS_BTEE); // T-junction right
+        attroff(A_NORMAL);
     }
-    mvprintw(rows - 2, start_col, "Left/Right to move, Enter to pick up, q to quit");
+
+    mvprintw(rows - 2, start_col, "hi twin");
 
     refresh();
 }
@@ -110,7 +135,8 @@ void run_game(int rows, int cols, GameConfig *config)
 
     int total_width = NUM_STACKS * (BOX_W + 2);
     int start_col = (cols - total_width) / 2;
-    int bottom_row = (rows / 2) + (BOX_H * MAX_SIZE) / 2 - BOX_H;
+    int total_height = BOX_H * MAX_SIZE;
+    int bottom_row = (rows / 2) - (total_height / 2);
 
     int selected = 0;
     int source = -1; // What stack the color was picked up from.
