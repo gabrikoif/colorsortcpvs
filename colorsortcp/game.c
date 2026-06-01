@@ -7,6 +7,7 @@
 static int NUM_STACKS;
 static int MAX_SIZE;
 static int NUM_EMPTY;
+static int SHOW_PULLED_LIST;
 
 static int stack_solved(Node *head)
 {
@@ -31,7 +32,7 @@ static int check_win(Node **stacks)
     return 1;
 }
 
-static void draw_all(int top_row, int start_col, Node** stacks, int selected, int rows)
+static void draw_all(int top_row, int start_col, Node** stacks, Node* pulledList, int selected, int rows)
 {
     clear();
 
@@ -73,6 +74,8 @@ static void draw_all(int top_row, int start_col, Node** stacks, int selected, in
         mvaddch(floor_row, col + BOX_W, ACS_BTEE); // T-junction right
         attroff(A_NORMAL);
     }
+
+    draw_stack(top_row, start_col - BOX_W * 3, BOX_H, BOX_W, pulledList, MAX_SIZE);
 
     mvprintw(rows - 2, start_col, "Enter/Up/Down to push or pull, c to cancel, shift + r to shuffle again, q to quit");
 
@@ -139,9 +142,10 @@ static void init_stacks(Node **stacks)
 
 void run_game(int rows, int cols, GameConfig *config)
 {
-    NUM_STACKS = config->num_stacks + config->num_empty;
+    NUM_STACKS = config->num_stacks + config->num_empty_stacks;
     MAX_SIZE = config->stack_size;
-    NUM_EMPTY = config->num_empty;
+    NUM_EMPTY = config->num_empty_stacks;
+    SHOW_PULLED_LIST = config->show_pulled_list;
 
     Node **stacks = malloc(NUM_STACKS * sizeof(Node *)); // Array of stacks(size of stacks) aka stacks[NUM_STACKS].
     // Did this to avoid VLA problems.
@@ -161,16 +165,21 @@ void run_game(int rows, int cols, GameConfig *config)
     int source = -1; // What stack the color was picked up from.
     int move_counter = 0;
 
-    draw_all(bottom_row, start_col, stacks, selected, rows);
+    draw_all(bottom_row, start_col, stacks, pulledList, selected, rows);
 
     int ch;
     while ((ch = getch()) != 'q')
     {
         if (ch == 'R')
         {
+            getmaxyx(stdscr, rows, cols);
+            total_width = NUM_STACKS * (BOX_W + 2);
+            start_col = (cols - total_width) / 2;
+            total_height = BOX_H * MAX_SIZE;
+            bottom_row = (rows / 2) - (total_height / 2);
 			init_stacks(stacks);
             clear();
-            draw_all(bottom_row, start_col, stacks, selected, rows);
+            draw_all(bottom_row, start_col, stacks, pulledList, selected, rows);
         }
         int pulledListSize = list_size(pulledList);
         switch (ch)
@@ -247,7 +256,7 @@ void run_game(int rows, int cols, GameConfig *config)
             break;
         }
 
-        draw_all(bottom_row, start_col, stacks, selected, rows);
+        draw_all(bottom_row, start_col, stacks, pulledList, selected, rows);
 
         if (check_win(stacks))
         {

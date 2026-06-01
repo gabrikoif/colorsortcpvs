@@ -11,7 +11,8 @@ int main()
     GameConfig config = {
         .num_stacks = 5,
         .stack_size = 5,
-        .num_empty = 2
+        .num_empty_stacks = 2,
+        .show_pulled_list = 1
     };
 
     int option = run_menu(rows, cols);
@@ -20,7 +21,7 @@ int main()
         clear();
         option = run_menu(rows, cols); // After options menu, return to main menu to select start game or exit
 	}
-    if (option == 2) { endwin(); return 0; } // run_menu returns 3 if user exited menu
+    if (option == MENU_NUM - 1) { endwin(); return 0; } // run_menu returns 3 if user exited menu
 	getmaxyx(stdscr, rows, cols); // Refresh terminal size after options menu
     run_game(rows, cols, &config);
 
