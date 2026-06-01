@@ -5,16 +5,25 @@
 
 int main()
 {
+    srand((unsigned int)time(NULL));
     int rows, cols;
     init(&rows, &cols);
     GameConfig config = {
-        .num_stacks = 4,
-        .stack_size = 4,
+        .num_stacks = 5,
+        .stack_size = 5,
         .num_empty = 2
     };
 
-    if (run_menu(rows, cols, &config)) { endwin(); return 0; } // run_menu returns 1 if user exited menu by 'q'
+    int option = run_menu(rows, cols);
+    while (option == 1) { 
+        run_options_menu(rows, cols, &config); // returns 1 if user selected options, then goes to options menu
+        clear();
+        option = run_menu(rows, cols); // After options menu, return to main menu to select start game or exit
+	}
+    if (option == 2) { endwin(); return 0; } // run_menu returns 3 if user exited menu
+	getmaxyx(stdscr, rows, cols); // Refresh terminal size after options menu
     run_game(rows, cols, &config);
+
 
     endwin();
     return 0;
