@@ -57,8 +57,8 @@ void draw_tube_bottom(int row, int col, int width)
     attroff(A_NORMAL);
 }
 
-// Always draws to max_size so the physical tubes never shrink or move
-void draw_stack(int start_row, int col, int box_height, int box_width, Node* head, int max_size)
+// Always draws to stack_size so the physical tubes never shrink or move
+void draw_stack(int start_row, int col, int box_height, int box_width, Node* head, int stack_size)
 {
     int current_items = 0;
     Node* temp = head;
@@ -67,10 +67,10 @@ void draw_stack(int start_row, int col, int box_height, int box_width, Node* hea
         temp = temp->next;
     }
 
-    int empty_slots = max_size - current_items;
+    int empty_slots = stack_size - current_items;
     temp = head;
 
-    for (int i = 0; i < max_size; i++) {
+    for (int i = 0; i < stack_size; i++) {
         int row = start_row + i * box_height;
 
         if (i < empty_slots) {
@@ -82,6 +82,6 @@ void draw_stack(int start_row, int col, int box_height, int box_width, Node* hea
         }
     }
 
-    int bottom_row = start_row + max_size * box_height;
+    int bottom_row = start_row + stack_size * box_height;
     draw_tube_bottom(bottom_row, col, box_width);
 }
