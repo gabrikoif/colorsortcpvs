@@ -1,5 +1,6 @@
 #include "display.h"
-#include "terminal.h"
+#include "terminal.h" // Ensures your PAIR_ definitions are accessible
+#include <curses.h>
 
 static int color_to_pair(int color)
 {
@@ -15,23 +16,72 @@ static int color_to_pair(int color)
     }
 }
 
-void draw_box(int row, int col, int height, int width, int color)
+// Draws an empty glass segment at the top of the tube
+void draw_empty_box(int row, int col, int height, int width)
 {
-    int pair = color_to_pair(color);
-    attron(COLOR_PAIR(pair));
-    for (int i = row; i < row + height; i++)
-        mvhline(i, col, ' ', width);
-    attroff(COLOR_PAIR(pair));
+    for (int i = 0; i < height; i++) {
+        attron(A_NORMAL);
+        mvaddch(row + i, col - 1, ACS_VLINE);        // Left glass wall
+        mvaddch(row + i, col + width, ACS_VLINE);    // Right glass wall
+        attroff(A_NORMAL);
+
+        // Clears out the inside space cleanly
+        mvhline(row + i, col, ' ', width);
+    }
 }
 
-void draw_stack(int start_row, int col, int box_height, int box_width, Node* head)
+// Draws a filled liquid segment inside the glass tube
+void draw_filled_box(int row, int col, int height, int width, int color)
 {
-    int i = 0;
-    while (head != NULL)
-    {
-        int row = start_row + i * box_height;
-        draw_box(row, col, box_height, box_width, head->data);
-        head = head->next;
-        i++;
+    int pair = color_to_pair(color);
+    for (int i = 0; i < height; i++) {
+        attron(A_NORMAL);
+        mvaddch(row + i, col - 1, ACS_VLINE);
+        mvaddch(row + i, col + width, ACS_VLINE);
+        attroff(A_NORMAL);
+
+        // Draws the colorful liquid inside
+        attron(COLOR_PAIR(pair));
+        mvhline(row + i, col, ' ', width);
+        attroff(COLOR_PAIR(pair));
     }
+}
+
+// Draws the rounded bottom of the test tube
+void draw_tube_bottom(int row, int col, int width)
+{
+    attron(A_NORMAL);
+    mvaddch(row, col - 1, ACS_LLCORNER);
+    mvhline(row, col, ACS_HLINE, width);
+    mvaddch(row, col + width, ACS_LRCORNER);
+    attroff(A_NORMAL);
+}
+
+// Always draws to stack_size so the physical tubes never shrink or move
+void draw_stack(int start_row, int col, int box_height, int box_width, Node* head, int stack_size)
+{
+    int current_items = 0;
+    Node* temp = head;
+    while (temp != NULL) {
+        current_items++;
+        temp = temp->next;
+    }
+
+    int empty_slots = stack_size - current_items;
+    temp = head;
+
+    for (int i = 0; i < stack_size; i++) {
+        int row = start_row + i * box_height;
+
+        if (i < empty_slots) {
+            draw_empty_box(row, col, box_height, box_width);
+        }
+        else {
+            draw_filled_box(row, col, box_height, box_width, temp->data);
+            temp = temp->next;
+        }
+    }
+
+    int bottom_row = start_row + stack_size * box_height;
+    draw_tube_bottom(bottom_row, col, box_width);
 }

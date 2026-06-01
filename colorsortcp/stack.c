@@ -66,3 +66,13 @@ int list_size(Node* head) {
     }
     return count;
 }
+
+int in_stack(Node* head, int val) {
+    while (head != NULL) {
+        if (head->data == val) {
+            return 1; // Found the value in the stack
+        }
+        head = head->next;
+    }
+    return 0; // Value not found in the stack
+}
