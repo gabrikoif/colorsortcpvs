@@ -74,7 +74,7 @@ static void draw_all(int top_row, int start_col, Node** stacks, int selected, in
         attroff(A_NORMAL);
     }
 
-    mvprintw(rows - 2, start_col, "hi twin");
+    mvprintw(rows - 2, start_col, "Enter/Up/Down to push or pull, c to cancel, shift + r to shuffle again, q to quit");
 
     refresh();
 }
@@ -88,14 +88,32 @@ static void init_stacks(Node **stacks)
     if (colors == NULL)
         return;
 
-    const int pallete[] = {
-        PAIR_RED, PAIR_BLUE, PAIR_GREEN, PAIR_YELLOW, PAIR_CYAN, PAIR_MAGENTA};
+    int pallete[] = {
+    PAIR_RED,
+    PAIR_GREEN,
+    PAIR_YELLOW,
+    PAIR_BLUE,
+    PAIR_MAGENTA,
+    PAIR_CYAN,
+    };
 
-    for (int i = 0; i < num_color_stacks; i++)
-        for (int j = 0; j < MAX_SIZE; j++)
-            colors[i * MAX_SIZE + j] = pallete[i % 6];
+	Node* prev_colors = NULL; // To keep track of previously generated colors for each stack
+    for (int i = 0; i < num_color_stacks; i++) {
+        int palette_size = sizeof(pallete) / sizeof(pallete[0]);
+        int random_color = pallete[rand() % palette_size];
 
-    srand(time(NULL));
+        while (in_stack(prev_colors, random_color)) {
+            random_color = pallete[rand() % palette_size];
+        }
+
+        // Push the unique color to your tracking stack
+        push(&prev_colors, random_color);
+        for (int j = 0; j < MAX_SIZE; j++) {
+            colors[i * MAX_SIZE + j] = random_color;
+        }
+    } 
+
+
     for (int i = total - 1; i > 0; i--)
     {
         int j = rand() % (i + 1);
@@ -116,6 +134,7 @@ static void init_stacks(Node **stacks)
         stacks[i] = NULL;
 
     free(colors);
+	free_list(prev_colors);
 }
 
 void run_game(int rows, int cols, GameConfig *config)
@@ -147,6 +166,12 @@ void run_game(int rows, int cols, GameConfig *config)
     int ch;
     while ((ch = getch()) != 'q')
     {
+        if (ch == 'R')
+        {
+			init_stacks(stacks);
+            clear();
+            draw_all(bottom_row, start_col, stacks, selected, rows);
+        }
         int pulledListSize = list_size(pulledList);
         switch (ch)
         {
@@ -158,6 +183,9 @@ void run_game(int rows, int cols, GameConfig *config)
             selected = (selected + 1) % NUM_STACKS;
             break;
 
+        case KEY_UP:
+        case KEY_DOWN:
+        case KEY_MOUSE:
         case '\n':
         case KEY_ENTER:
             if (pulledListSize == 0)
@@ -223,7 +251,7 @@ void run_game(int rows, int cols, GameConfig *config)
 
         if (check_win(stacks))
         {
-            mvprintw(rows / 2, cols / 2 - 4, "YOU WIN! Took you %d moves", move_counter);
+            mvprintw(rows/2 - 6, cols / 2 - 6, "YOU WIN! Took you %d moves", move_counter);
             refresh();
             getch();
             break;
