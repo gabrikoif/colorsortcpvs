@@ -12,4 +12,4 @@ void printlist(Node* head);
 void push(Node** head, int val);
 int pull(Node** head, int* top);
 int list_size(Node* head);
-int is_empty(Node* head, int val);
+int in_stack(Node* head, int val);
