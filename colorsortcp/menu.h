@@ -1,8 +1,8 @@
 #pragma once
 #include <curses.h>
 
-#define OPT_NUM 5
-#define MENU_NUM 4
+#define OPT_NUM 5 
+#define MENU_NUM 5
 typedef struct
 {
     int num_stacks;
@@ -18,5 +18,5 @@ typedef struct
 #define MIN_EMPTY_STACKS 2
 #define MAX_EMPTY_STACKS 4
 
-int run_menu(int rows, int cols);
+int run_menu(int *rows, int *cols);
 void run_options_menu(int rows, int cols, GameConfig* config);
