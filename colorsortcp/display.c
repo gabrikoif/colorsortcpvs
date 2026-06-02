@@ -17,13 +17,16 @@ static int color_to_pair(int color)
 }
 
 // Draws an empty glass segment at the top of the tube
-void draw_empty_box(int row, int col, int height, int width)
+static void draw_empty_box(int row, int col, int height, int width, int draw_tube)
 {
     for (int i = 0; i < height; i++) {
+      if (draw_tube)
+      {
         attron(A_NORMAL);
         mvaddch(row + i, col - 1, ACS_VLINE);        // Left glass wall
         mvaddch(row + i, col + width, ACS_VLINE);    // Right glass wall
         attroff(A_NORMAL);
+      }
 
         // Clears out the inside space cleanly
         mvhline(row + i, col, ' ', width);
@@ -31,14 +34,17 @@ void draw_empty_box(int row, int col, int height, int width)
 }
 
 // Draws a filled liquid segment inside the glass tube
-void draw_filled_box(int row, int col, int height, int width, int color)
+static void draw_filled_box(int row, int col, int height, int width, int color, int draw_tube)
 {
     int pair = color_to_pair(color);
     for (int i = 0; i < height; i++) {
+      if (draw_tube)
+      {
         attron(A_NORMAL);
         mvaddch(row + i, col - 1, ACS_VLINE);
         mvaddch(row + i, col + width, ACS_VLINE);
         attroff(A_NORMAL);
+      }
 
         // Draws the colorful liquid inside
         attron(COLOR_PAIR(pair));
@@ -48,7 +54,7 @@ void draw_filled_box(int row, int col, int height, int width, int color)
 }
 
 // Draws the rounded bottom of the test tube
-void draw_tube_bottom(int row, int col, int width)
+static void draw_tube_bottom(int row, int col, int width)
 {
     attron(A_NORMAL);
     mvaddch(row, col - 1, ACS_LLCORNER);
@@ -58,7 +64,7 @@ void draw_tube_bottom(int row, int col, int width)
 }
 
 // Always draws to stack_size so the physical tubes never shrink or move
-void draw_stack(int start_row, int col, int box_height, int box_width, Node* head, int stack_size)
+void draw_stack(int start_row, int col, int box_height, int box_width, Node* head, int stack_size, int draw_tube)
 {
     int current_items = 0;
     Node* temp = head;
@@ -74,14 +80,15 @@ void draw_stack(int start_row, int col, int box_height, int box_width, Node* hea
         int row = start_row + i * box_height;
 
         if (i < empty_slots) {
-            draw_empty_box(row, col, box_height, box_width);
+            draw_empty_box(row, col, box_height, box_width, draw_tube);
         }
         else {
-            draw_filled_box(row, col, box_height, box_width, temp->data);
+            draw_filled_box(row, col, box_height, box_width, temp->data, draw_tube);
             temp = temp->next;
         }
     }
 
     int bottom_row = start_row + stack_size * box_height;
-    draw_tube_bottom(bottom_row, col, box_width);
+    if (draw_tube) draw_tube_bottom(bottom_row, col, box_width);
+    
 }
