@@ -66,7 +66,8 @@ static void draw_all(int top_row, int start_col, Node** stacks, Node* pulledList
         attroff(A_NORMAL);
 
         // 4. Draw the actual stack
-        draw_stack(top_row, col, BOX_H, BOX_W, stacks[i], MAX_SIZE);
+        draw_stack(top_row, col, BOX_H, BOX_W, stacks[i], MAX_SIZE, 1);
+        // 1 for draw_tube yes.
 
         // 5. Connect the bottom of the tube to the floor
         attron(A_NORMAL);
@@ -75,7 +76,12 @@ static void draw_all(int top_row, int start_col, Node** stacks, Node* pulledList
         attroff(A_NORMAL);
     }
 
-    draw_stack(top_row, start_col - BOX_W * 3, BOX_H, BOX_W, pulledList, MAX_SIZE);
+    if (SHOW_PULLED_LIST)
+    {
+      draw_stack(top_row, start_col - BOX_W * 3, BOX_H, BOX_W, pulledList, MAX_SIZE, 0);
+      // No need for a tube for the pulled list.
+      // 0 for draw_tube no.
+    }
 
     mvprintw(rows - 2, start_col, "Enter/Up/Down to push or pull, c to cancel, shift + r to shuffle again, q to quit");
 
@@ -184,17 +190,20 @@ void run_game(int rows, int cols, GameConfig *config)
         int pulledListSize = list_size(pulledList);
         switch (ch)
         {
+        case 'a':
         case KEY_LEFT:
             selected = (selected - 1 + NUM_STACKS) % NUM_STACKS;
             break;
 
+        case 'd':
         case KEY_RIGHT:
             selected = (selected + 1) % NUM_STACKS;
             break;
 
         case KEY_UP:
         case KEY_DOWN:
-        case KEY_MOUSE:
+        case 'w':
+        case 's':
         case '\n':
         case KEY_ENTER:
             if (pulledListSize == 0)
