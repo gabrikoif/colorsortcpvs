@@ -227,7 +227,7 @@ int run_menu(int *rows, int *cols)
       selected = (selected + 1) % MENU_NUM;
       break;
     case 10: // Enter key
-      if (selected == OPT_NUM - 2)
+      if (selected == MENU_NUM - 2)
       {
         getmaxyx(stdscr, *rows, *cols);
         clear();
