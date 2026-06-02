@@ -1,7 +1,3 @@
-#include <curses.h>
-#include <stdlib.h>
-
-// Adjust these headers based on your actual filenames
 #include "menu.h"
 #include "terminal.h"
 
@@ -19,7 +15,6 @@ void draw_options_menu(int selected, GameConfig *config, int rows, int cols)
 
   int menu_y = rows / 2;
 
-  // 2. Option 1: Number of Stacks
   int opt1 = (cols - 25) / 2;
   if (selected == 0)
   {
@@ -32,7 +27,6 @@ void draw_options_menu(int selected, GameConfig *config, int rows, int cols)
     mvprintw(menu_y, opt1, "   Total Tubes: %2d   ", config->num_stacks);
   }
 
-  // 3. Option 2: Tube Capacity (Maopt Size)
   int opt2 = (cols - 25) / 2;
   if (selected == 1)
   {
@@ -69,7 +63,6 @@ void draw_options_menu(int selected, GameConfig *config, int rows, int cols)
     mvprintw(menu_y + 6, opt4, "   Empty stacks: %2d   ", config->num_empty_stacks);
   }
 
-  // 4. Option 4: Save & Back Button
   int opt5 = (cols - 14) / 2;
   if (selected == OPT_NUM - 1)
   {
@@ -165,7 +158,6 @@ void run_options_menu(int rows, int cols, GameConfig *config)
 
 void draw_menu(int selected, int rows, int cols)
 {
-  // --- 1. Draw Textured Background safely using Cyan pair 20 ---
   attron(COLOR_PAIR(20) | A_DIM);
   for (int y = 0; y < rows; y++)
   {
